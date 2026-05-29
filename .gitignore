@@ -1,0 +1,17 @@
+# Firecrawl / MCP working caches (regenerated locally; never committed)
+.firecrawl/
+.playwright-mcp/
+
+# Inbox originals are large binaries — keep the folder + its README, ignore the rest
+inbox/processed/*
+!inbox/processed/README.md
+!inbox/processed/.gitkeep
+
+# Generated snapshots for Claude Team Projects — keep the folder, ignore contents
+outputs/exports/*
+!outputs/exports/.gitkeep
+
+# Secrets and OS / tooling cruft
+.secrets/
+.DS_Store
+__pycache__/
