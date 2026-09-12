@@ -190,10 +190,16 @@ this tagging convention so the linter can track provenance and confidence:
 ## Inbox Processing Protocol
 
 1. List `inbox/` at session start
-2. For each file: read it, extract relevant info, update `knowledge/`
-3. Move processed file to `inbox/processed/` (never delete originals)
+2. For each file: read it, write a Layer-1 digest to `knowledge/sources/<type>/` following
+   `.claude/templates/source-digest.md`, and update `knowledge/`
+3. Move the original — and any Markdown conversion of it — to `inbox/processed/` (never delete
+   originals), then **verify with `ls inbox/` that the root is clear**; a file deliberately left
+   behind gets named in the report
 4. Note what was processed in the session log
 5. Update `ARTIFACTS.md` if new artifacts were created
+
+The digest is the reading surface, the original the lookup surface: every digest carries a pointer to
+its original and one sentence saying when opening it is worth the trouble.
 
 ---
 

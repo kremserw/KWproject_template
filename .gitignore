@@ -11,6 +11,9 @@ inbox/processed/*
 outputs/exports/*
 !outputs/exports/.gitkeep
 
+# Machine-specific Claude settings (the tracked .claude/settings.json is the shared one)
+.claude/settings.local.json
+
 # Secrets and OS / tooling cruft
 .secrets/
 .DS_Store
