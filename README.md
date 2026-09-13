@@ -150,9 +150,9 @@ the L5 double-loop: the scaffold adapts as the project's real shape emerges).
 └── .claude/                  L5 the machinery
     ├── agents/               5 subagents (below)
     ├── skills/               6 slash-command skills (below)
-    ├── hooks/                2 file-protection hooks (below)
+    ├── hooks/                4 hooks (below)
     ├── templates/            reusable content skeletons agents copy from
-    └── settings.local.json   permissions + hook wiring + sandbox
+    └── settings.json         hook wiring (tracked — this is what makes the hooks run)
 ```
 
 ### Agents (`.claude/agents/`)
@@ -175,10 +175,19 @@ the L5 double-loop: the scaffold adapts as the project's real shape emerges).
 | **/new-unit** | New unit of work | Scaffolds a unit's knowledge + planning + report stubs |
 
 ### Hooks (`.claude/hooks/`)
-| Hook | Protects |
-|---|---|
-| **protect-inbox.sh** | Blocks edits to `inbox/` originals — forces a move to `processed/` first |
-| **protect-archive.sh** | Blocks edits to `outputs/reports/*/archive/` — archived versions are immutable history |
+| Hook | Event | Does |
+|---|---|---|
+| **protect-inbox.sh** | `PreToolUse` | Blocks edits to `inbox/` originals — forces a move to `processed/` first |
+| **protect-archive.sh** | `PreToolUse` | Blocks edits to `outputs/reports/*/archive/` — archived versions are immutable history |
+| **convert-inboxes.sh** | `SessionStart` | Converts every new PDF/Office/HTML file in `inbox/` to Markdown beside the original, so a dropped document is readable without a per-file conversion step. Optional dependency — silently does nothing if `md-convert` is not installed (see SETUP.md) |
+| **verify-inbox-cleared.sh** | `SubagentStop` | After an `inbox-processor` run, checks that `inbox/` root is actually clear and names any file still sitting there. Nudges once, never loops |
+
+All four are wired in `.claude/settings.json`, which is tracked. **A hook that is not wired does
+nothing and looks like it is working** — if you add a hook, add it there in the same commit.
+
+> **These hooks only run in a Claude Code session whose working directory is this repo.** An
+> assistant that merely *reads* the repo from elsewhere never loads `.claude/` at all, and none of
+> these protections apply to it.
 
 ---
 

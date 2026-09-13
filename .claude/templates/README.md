@@ -7,6 +7,7 @@ artifact follows the same proven shape. These are source-of-truth fragments, not
 |---|---|---|
 | `_summary.md` | `/session-wrap`, linter, `/new-unit` | a folder's `knowledge/**/_summary.md` |
 | `_index.md` | `inbox-processor` | a `knowledge/sources/materials/<bundle>/_index.md` manifest |
+| `source-digest.md` | `inbox-processor` | a per-source digest in `knowledge/sources/<type>/` |
 | `provenance-tag.md` | every agent/skill that writes knowledge | the `Source/Verification/Confidence` block |
 | `report-main.md` | Writing Agent / `project-initializer` | `outputs/reports/main/<slug>-current.md` |
 | `report-unit.md` | `/new-unit`, Writing Agent | `outputs/reports/units/<slug>-current.md` |

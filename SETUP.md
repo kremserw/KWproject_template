@@ -86,12 +86,29 @@ Edit `~/.claude/settings.json` to enable the plugins and set the model:
 
 ## Step 5: Local Project Settings
 
-The repo already includes `.claude/settings.local.json` with a sensible permission allowlist and the
-two file-protection hooks wired in. The hook commands use relative paths (`.claude/hooks/...`) so they
-work regardless of where the repo is cloned. If a hook doesn't trigger, run `chmod +x .claude/hooks/*.sh`.
+The repo includes a tracked **`.claude/settings.json`** that wires all four hooks (`PreToolUse` for
+the two file-protection hooks, `SessionStart` for the inbox converter, `SubagentStop` for the
+inbox-cleared check). Commands resolve through `$CLAUDE_PROJECT_DIR`, so they work regardless of
+where the repo is cloned. If a hook doesn't trigger, run `chmod +x .claude/hooks/*.sh`.
 
-Some environments need extra permission entries (e.g. `Bash(pdftoppm:*)` for PDF rendering). Add them
-to the `allow` list as needed for your machine.
+**The hooks only apply inside a Claude Code session started in this directory.** An assistant that
+reads the repo from some other working directory never loads `.claude/` — run project work in the
+repo, not next to it.
+
+Anything machine-specific — a permission allowlist, extra entries such as `Bash(pdftoppm:*)` for PDF
+rendering — belongs in an untracked `.claude/settings.local.json` of your own, which Claude Code
+merges on top of the tracked file.
+
+### Optional: `md-convert` for automatic inbox conversion
+
+`convert-inboxes.sh` turns each new PDF / DOCX / PPTX / XLSX / HTML / EPUB file in `inbox/` into a
+Markdown file beside it at session start. It needs a `md-convert` command on `PATH` (or the path in
+the `MDCONVERT` environment variable) that takes a file and writes `<name>.md` next to it — typically
+[MarkItDown](https://github.com/microsoft/markitdown) plus an OCR fallback (`ocrmypdf`, `tesseract`)
+for scanned PDFs.
+
+**This dependency is optional.** Without it the hook exits silently and you convert documents by hand
+as before; nothing else in the project changes.
 
 ---
 
@@ -120,10 +137,12 @@ These components are tracked in git and work immediately after cloning.
 | `project-initializer` | One-time bootstrap writer (used only by `/setup-project`) |
 
 ### Hooks (`.claude/hooks/`)
-| Hook | Purpose |
-|------|---------|
-| `protect-inbox.sh` | Blocks edits to `inbox/` originals (must move to `processed/` first) |
-| `protect-archive.sh` | Blocks edits to `outputs/reports/*/archive/` (archived outputs are immutable) |
+| Hook | Event | Purpose |
+|------|-------|---------|
+| `protect-inbox.sh` | `PreToolUse` | Blocks edits to `inbox/` originals (must move to `processed/` first) |
+| `protect-archive.sh` | `PreToolUse` | Blocks edits to `outputs/reports/*/archive/` (archived outputs are immutable) |
+| `convert-inboxes.sh` | `SessionStart` | Converts new inbox documents to Markdown beside the original (optional dependency, Step 5) |
+| `verify-inbox-cleared.sh` | `SubagentStop` | Checks `inbox/` root is clear after an `inbox-processor` run |
 
 ### Skills (`.claude/skills/`)
 | Skill | Trigger | Purpose |
@@ -159,7 +178,8 @@ Once set up, a typical session:
 | Issue | Fix |
 |-------|-----|
 | Firecrawl commands fail | Check `FIRECRAWL_API_KEY` is set in your environment |
-| Hooks don't trigger | Verify `.claude/settings.local.json` exists and hook paths resolve |
+| Hooks don't trigger | Verify `.claude/settings.json` exists and hook paths resolve — and that the session's working directory IS this repo |
+| Inbox files aren't converted to Markdown | `md-convert` is not on `PATH`; the hook is a deliberate no-op without it (Step 5) |
 | Playwright browser fails | Run `npx playwright install chromium` for browser binaries |
 | Plugins not loading | Restart Claude Code after plugin installation |
 | "Permission denied" on hooks | Run `chmod +x .claude/hooks/*.sh` |
