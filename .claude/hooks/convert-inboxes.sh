@@ -9,8 +9,8 @@
 # just dropped, not to re-walk what has already been filed.
 #
 # Dependency, and it is optional: `md-convert` is NOT part of this repo. If it is absent the
-# hook exits silently and nothing breaks — the inbox-processor then reads originals with the
-# document skills as before. Install it (MarkItDown + ocrmypdf + poppler-utils) only if you
+# hook exits silently and nothing breaks — the inbox-processor then reads originals as its
+# Step 2b says. Install it (MarkItDown + ocrmypdf + poppler-utils) only if you
 # want the automatic conversion; see SETUP.md.
 #
 # Scope: CLAUDE_PROJECT_DIR, i.e. THIS repo's inbox and no other. Do not widen this to a

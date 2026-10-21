@@ -96,6 +96,8 @@ Identify any files that are NOT in `inbox/processed/` (i.e., new unprocessed fil
 If new files exist:
 - List them for the user
 - Note: "These will need processing. Want me to run the inbox-processor now, or later?"
+- When you run it, pass this session's document-reading instructions into the inbox-processor's
+  prompt: its Step 2b reads files with the tools that prompt names
 
 If inbox is empty (only `processed/` folder): note "Inbox clear."
 

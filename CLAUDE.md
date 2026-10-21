@@ -39,11 +39,14 @@ Output language: **{{OUTPUT_LANGUAGE}}**.
   Key commands: `firecrawl search`, `firecrawl scrape`, `firecrawl agent`
   Always run independent scrapes in parallel with `&` + `wait`.
 
-### Document Output
+### Document Output (optional — the `document-skills` plugin, where installed)
 - **`document-skills:doc-coauthoring`** — structured report writing and iteration
-- **`document-skills:pdf`** — reading, extracting, and merging PDF sources
+- **`document-skills:pdf`** — producing and merging PDF files
 - **`document-skills:docx`** — producing polished Word document outputs
 - **`document-skills:pptx`** — producing PowerPoint slide decks from reports
+
+Reading sources does not depend on these: Step 2b of `.claude/agents/inbox-processor.md` says how
+each file type is read, and its "Transcribing pages" section covers scans and handwriting.
 
 ### Project skills (this template)
 - **`/setup-project`** — one-time first-run configuration (see FIRST RUN above)
@@ -190,11 +193,16 @@ this tagging convention so the linter can track provenance and confidence:
 ## Inbox Processing Protocol
 
 1. List `inbox/` at session start
-2. For each file: read it, write a Layer-1 digest to `knowledge/sources/<type>/` following
-   `.claude/templates/source-digest.md`, and update `knowledge/`
-3. Move the original — and any Markdown conversion of it — to `inbox/processed/` (never delete
-   originals), then **verify with `ls inbox/` that the root is clear**; a file deliberately left
-   behind gets named in the report
+2. For each file: read it as Step 2b of `.claude/agents/inbox-processor.md` says, write a Layer-1
+   digest to `knowledge/sources/<type>/` following `.claude/templates/source-digest.md`, and update
+   `knowledge/`. Scans and handwriting are transcribed first, in the main session, never by a subagent
+   (the inbox-processor's "Transcribing pages"), and reach `knowledge/` only once the requester has
+   checked the transcription. When you hand the files to the inbox-processor, pass this session's
+   document-reading instructions into the inbox-processor's prompt
+3. Move the original to its home with its bytes unchanged — `inbox/processed/` by default,
+   `knowledge/sources/<type>/` beside its digest in a project that versions its corpus — and any
+   Markdown conversion of it to `inbox/processed/` (never delete originals), then **verify with
+   `ls inbox/` that the root is clear**; a file deliberately left behind gets named in the report
 4. Note what was processed in the session log
 5. Update `ARTIFACTS.md` if new artifacts were created
 
