@@ -21,6 +21,8 @@ report "Inbox is clear" and stop.
 A `<name>.md` sitting beside a `<name>.docx`/`.pdf` is **the same source, already converted** by the
 `convert-inboxes.sh` SessionStart hook — read the Markdown, treat the pair as one item, and file both
 in Step 3.
+An OCR'd conversion of a scan is not a reading of it, and a conversion may drop tracked changes,
+comments and handwriting: where those matter, read the original as Step 2b says.
 
 ### Step 2 — For each file found
 
@@ -33,12 +35,23 @@ in Step 3.
 | Academic papers, news articles, web content | articles | `articles/` |
 | Slides, syllabi, books, raw datasets, and other bundled source material | materials | `materials/` |
 
-**b) Read the file** using the appropriate skill:
-- PDF → use `document-skills:pdf`
-- PPTX → use `document-skills:pptx`
-- DOCX → use `document-skills:docx`
-- XLSX → use `document-skills:xlsx`
-- MD or TXT → read directly
+**b) Read the file** with what this session actually has — never improvise an extraction. Use the
+tools your session's instructions name; as the inbox-processor, the tools your prompt names: the
+session that hands you files passes its document-reading instructions into your prompt.
+- MD or TXT → read directly. A `<name>.md` beside an original is its conversion: read it instead of
+  the original — but a conversion may not carry tracked changes, comments or handwriting, and an OCR'd
+  conversion of a scan is not a reading of it, so where those matter, read the original as below.
+- DOCX / PPTX / XLSX → the document extractor your session's instructions name, run by its path on
+  the file; a `document-skills:*` skill only if one is actually available in this session.
+- PDF with a text layer → the PDF text tool your session's instructions name; otherwise
+  `pdftotext -layout -f N -l N <file> -`, a few pages at a time, so that every quote keeps its page.
+- A PDF that may carry handwriting, highlights or note marks (a reviewed draft, an annotated copy) →
+  before relying on its text, render a page or two (the first and one from the middle, as in
+  **Transcribing pages**, rule 1) and look: a text layer drops ink, highlights and notes. If you see
+  marks, or cannot tell, the file is notes on its pages (next line).
+- Scanned pages, images, handwriting, notes on a PDF's pages → **Transcribing pages** below.
+- A file nothing available can read → leave it in `inbox/` and name it in the report. Do not work
+  around a missing or refused tool: no ad-hoc `unzip`, `python` or parsing of the file's internals.
 
 **c) Produce a Layer-1 DIGEST — not a summary:**
 
@@ -94,6 +107,9 @@ reports contain both; split the extracts accordingly.
   **Original: `inbox/processed/<original-filename>`**
   <One sentence: when is the original worth opening?>
   ```
+  In a project that versions its corpus beside the digests, the line reads
+  **Original: `knowledge/sources/<type>/<slug>.<ext>`** instead: the pointer and the move always say the
+  same.
 - The original's move to its terminal home happens in Step 3, together with any Markdown conversion of
   it. Do not move it here.
 
@@ -111,10 +127,10 @@ processed. Leaving the root clear is what makes the next run's Step 1 meaningful
 
 | What | Where it goes |
 |---|---|
-| An original you digested | `mv` to `inbox/processed/` |
-| Its Markdown conversion, if the SessionStart hook made one | `mv` to `inbox/processed/` alongside it |
+| An original you digested | `mv` to its home as it is — the bytes stay unchanged: `inbox/processed/` by default; `knowledge/sources/<type>/<slug>.<ext>`, beside its digest, in a project that versions its corpus (see the note below) |
+| Its Markdown conversion, if the SessionStart hook made one | `mv` to `inbox/processed/` |
 | A reference or non-source file (a cover note, a duplicate) | `mv` to `inbox/processed/` — out of the root either way |
-| Something you deliberately flagged as unclear in Step 5 | Leave it in `inbox/` and **name it** in the report |
+| Something you deliberately flagged as unclear in Step 5, or a file Step 2b left unread or for a transcription | Leave it in `inbox/` and **name it** in the report |
 
 Never delete anything from `inbox/`. Moving is the only disposition.
 
@@ -144,9 +160,52 @@ Summarise:
 - **The result of the `ls inbox/` check from Step 3**, and any file you left there, by name
 - Whether anything in the inbox was unclear or could not be categorised (flag for user)
 
+## Transcribing pages (handwriting, scans, annotated PDFs)
+
+Handwriting, a scan or a note on a page has no text layer to check a reading against, so reading it
+follows this procedure. Step 2b sends such files here; so does any request for the notes on a
+document's pages.
+
+**Transcribe in the main session; never delegate it to a subagent.** Reading this as the
+inbox-processor subagent, you do not transcribe: leave the file in `inbox/` and name it in your
+report as needing a transcription in the main session.
+
+1. **Render the pages yourself** — with the page renderer your session's instructions name, or
+   `pdftoppm` where it is allowed (an image file already is a page). Render each full page at
+   about 150 dpi to locate the marks, and a crop at 200 dpi or more of every note you are unsure of.
+   Renders go only into `working/renders/<name>/` (create it with a `.gitignore` holding `*`) or
+   outside the repo, and are never committed.
+2. **Work in batches of at most 5 pages**, and append each batch's entries to the output file — the
+   one the requester names, else `working/research/<slug>-transcription-<YYYY-MM-DD>.md` — before you
+   read the next batch, so that every entry is written while its page is in view.
+3. **Never write a page's entry, or anything about it, from memory or from a summary:** if your
+   context was compacted, Read the page again first.
+4. **One entry for EVERY page**, in page order: `### p.N`, then each note verbatim with its anchor
+   (where on the page, the printed words next to it) — or `none`:
+   ```
+   ### p.N
+   - "<the note, verbatim>" — <where on the page>, next to "<the printed words>"
+   ```
+   Put `[?]` after each word you are unsure of, and `[illegible]` for what you cannot read.
+5. **Attribute a note to a person only from evidence.** Typed comments carry their author in the
+   file's metadata; handwriting is someone's only when the requester says whose it is.
+6. **No aggregate claims** — "recurs on N pages", top-N lists, counts — unless each page is listed
+   with them. **No summaries nobody asked for.**
+7. **Finish with a coverage table, built by re-reading your output file** — never from memory: one
+   row per page, the page and `notes` or `none` (the notes are not restated). Then re-read **3 pages
+   chosen at random** from crops, and record which pages and what the re-read changed.
+8. **The Verification line** says `transcription (pp.1-N, every page has an entry)` only when the
+   coverage table lists every page; otherwise `partial — pp.…`, naming the pages done. Never
+   `source-verified`: the original backs the pages, not the reading of them. **No heading or line
+   calls the transcription verified, complete or all-pages** unless the coverage table lists every
+   page.
+9. **Nothing from a transcription goes into `knowledge/`** (`foundations/` included) or into
+   `OPEN-QUESTIONS.md` until the requester has checked it.
+
 ## What to flag as unclear
 - Files with no obvious relevance to the project goal ({{PROJECT_GOAL}}) or its knowledge domains ({{DOMAINS}})
 - Duplicate content already fully covered in `knowledge/`
 - Files requiring human judgement on how to use them (e.g. a note with a new research direction)
+- Files Step 2b left unread (nothing available reads them) or for a transcription in the main session — leave them in `inbox/` and name each, with the reason
 
 Always flag rather than guess on anything ambiguous.

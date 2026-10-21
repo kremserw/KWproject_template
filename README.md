@@ -223,5 +223,7 @@ nothing and looks like it is working** — if you add a hook, add it there in th
 
 - **Claude Code** (Anthropic CLI) — the orchestrator and primary agent
 - **Firecrawl** (`firecrawl-cli`) — all web research, search, and URL scraping
-- Optional document/plugin skills for PDF/DOCX/PPTX/XLSX output
+- Optional: the `document-skills` plugin for polished PDF/DOCX/PPTX/XLSX output. Reading sources
+  does not need it — Step 2b of `.claude/agents/inbox-processor.md` says how each file type is read
+  (PDFs with poppler-utils)
 - No database, no server, no build system — everything is plain markdown files

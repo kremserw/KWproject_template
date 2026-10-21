@@ -14,6 +14,7 @@ what it's about — run `/setup-project` once inside Claude Code; see README.md.
 | **Anthropic subscription** | Max plan recommended | For a large-context model (1M window) |
 | **Node.js** | v22.x (via nvm recommended) | Runtime for Claude Code + Firecrawl CLI |
 | **Python 3** | ≥ 3.11 | Used by hook scripts for JSON parsing |
+| **poppler-utils** | any recent | `pdftotext` / `pdftoppm`: reading text PDFs, rendering pages for transcription |
 | **npm** | ≥ 10.x | Package manager (comes with Node.js) |
 | **Git** | any recent | Version control |
 | **GitHub CLI (`gh`)** | any recent | Optional, for PR/issue workflows |
@@ -55,11 +56,14 @@ Add the export to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) so it persi
 These plugins provide skills used throughout the project. Install them from inside Claude Code:
 
 ```
-/plugin add anthropic-agent-skills/document-skills
 /plugin add claude-plugins-official/playwright
 /plugin add claude-plugins-official/context7
 /plugin add claude-plugins-official/firecrawl
 ```
+
+Optional: `/plugin add anthropic-agent-skills/document-skills` — polished Word, PowerPoint and PDF
+output. Reading sources does not need it: Step 2b of `.claude/agents/inbox-processor.md` says how
+each file type is read.
 
 (Add any others your workflow relies on, e.g. a planning/orchestration marketplace plugin.)
 
@@ -67,7 +71,8 @@ These plugins provide skills used throughout the project. Install them from insi
 
 ## Step 4: Configure Global Settings
 
-Edit `~/.claude/settings.json` to enable the plugins and set the model:
+Edit `~/.claude/settings.json` to enable the plugins and set the model (leave out the
+`document-skills` entry if you skipped that optional plugin):
 
 ```json
 {
@@ -95,9 +100,9 @@ where the repo is cloned. If a hook doesn't trigger, run `chmod +x .claude/hooks
 reads the repo from some other working directory never loads `.claude/` — run project work in the
 repo, not next to it.
 
-Anything machine-specific — a permission allowlist, extra entries such as `Bash(pdftoppm:*)` for PDF
-rendering — belongs in an untracked `.claude/settings.local.json` of your own, which Claude Code
-merges on top of the tracked file.
+Anything machine-specific — a permission allowlist, extra entries such as `Bash(pdftotext:*)` and
+`Bash(pdftoppm:*)` for reading and rendering PDFs (inbox-processor Step 2b) — belongs in an untracked
+`.claude/settings.local.json` of your own, which Claude Code merges on top of the tracked file.
 
 ### Optional: `md-convert` for automatic inbox conversion
 

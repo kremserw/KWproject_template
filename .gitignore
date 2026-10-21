@@ -2,6 +2,9 @@
 .firecrawl/
 .playwright-mcp/
 
+# Rendered page images (transcription working files; never committed)
+working/renders/
+
 # Inbox originals are large binaries — keep the folder + its README, ignore the rest
 inbox/processed/*
 !inbox/processed/README.md

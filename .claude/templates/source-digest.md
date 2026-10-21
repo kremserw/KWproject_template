@@ -31,7 +31,7 @@ actually are, delete the rest at setup. Everything unmarked is common to both.
 # <Authors Year | Body / Sender> — <Full title | what it is, D Month YYYY>
 
 *Source: inbox-file (<original-filename>)*
-*Verification: [source-verified | llm-derived]*
+*Verification: [source-verified | llm-derived | transcription (pp.1-N, every page has an entry) | partial — pp.…]*
 *Confidence: [single-source | corroborated]*
 *Pages refer to: <printed page numbers | PDF page index>*        [academic]
 
@@ -119,6 +119,12 @@ Clearly marked as our reading, never blended into "The substance".
 - Keep interpretation OUT of every section except "Open hooks".
 - `source-verified` is earned only because the archived original backs every claim. Use `llm-derived`
   where the content was generated rather than recorded.
+- A **transcription** (handwriting, scans, notes on a page — the inbox-processor's "Transcribing
+  pages") is never `source-verified`: the original backs the pages, not the reading of them. Its
+  Verification says `transcription (pp.1-N, every page has an entry)` only when a coverage table
+  lists every page, otherwise `partial — pp.…`, and no heading or line calls it verified, complete or
+  all-pages unless the table lists every page. `[?]` marks an uncertain word, `[illegible]`
+  unreadable text, and nothing from it enters `knowledge/` until the requester has checked it.
 - If the source contradicts something already in `knowledge/`, say so under Reliability — do not
   silently resolve it, and do not edit the other file from inside this one.
 
