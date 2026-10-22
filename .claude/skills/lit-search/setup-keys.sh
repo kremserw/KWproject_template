@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# setup-keys.sh — store the Web of Science and Scopus API keys for the /lit-search skill.
+# setup-keys.sh — store the Web of Science, Scopus and (optional) OpenAlex API keys for the /lit-search skill.
 #
 # Run it YOURSELF in a terminal, in the repo root:   bash .claude/skills/lit-search/setup-keys.sh
 # Not through Claude, not in a chat: the keys are typed here, hidden, and go only into
 #   .secrets/clarivate-wos.env     WOS_STARTER_API_KEY=…   (Clarivate developer portal, institutional Starter key)
 #   .secrets/scopus-elsevier.env   SCOPUS_API_KEY=…        (dev.elsevier.com)
+#   .secrets/openalex.env          OPENALEX_API_KEY=…      (optional, free: openalex.org/settings/api)
+# Without WoS and Scopus keys the skill searches OpenAlex, which needs no key at all; skip what you lack.
 # .secrets/ is created mode 700, the files 600. The script refuses to write unless git ignores .secrets/.
 # A key already present is kept unless you pass --replace. Other lines in those files are left as they are.
 # Nothing is ever printed back; at the end the preflight (lit-search.py --check) tests both keys live.
@@ -43,7 +45,8 @@ store() {  # store VAR FILE LABEL
 
 store WOS_STARTER_API_KEY .secrets/clarivate-wos.env   "Web of Science (Clarivate Starter)"
 store SCOPUS_API_KEY      .secrets/scopus-elsevier.env "Scopus (Elsevier)"
+store OPENALEX_API_KEY    .secrets/openalex.env        "OpenAlex (optional)"
 
 echo
-echo "Testing both keys live (needs the JKU VPN for Scopus):"
+echo "Testing the keys live (Scopus needs the JKU network or VPN):"
 python3 "$here/lit-search.py" --check
