@@ -63,6 +63,12 @@ prompts for free-text. Carry sensible defaults so a user can move fast.
 8. **Collaborators** — names/handles sharing the repo (default: solo). → `COLLABORATORS`
 9. **Git remote** — detect first: `git remote get-url origin 2>/dev/null`. If set, confirm it; else
    ask for `owner/repo`, or accept "local-only". → `REPO_REMOTE`
+9a. **Where literature PDFs live** — `zotero` or `project`. Default from question 8: solo → `zotero`
+   (the reference manager is the only copy, so there is one version of each paper); shared →
+   `project` (the inbox rule: originals to `inbox/processed/`), because collaborators may not share
+   the library. Only scholarly literature goes to Zotero; grey literature (reports, statistics, web
+   pages) stays in the project unless the project lead decides otherwise case by case. →
+   `LITERATURE_HOME`
 
 ### Group E — Language & Cadence (multiple choice)
 10. **Output language + register** — English / German (formal "Sie") / German (informal) / other.

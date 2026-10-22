@@ -19,6 +19,10 @@ digest worth the effort is that it is the same shape every time.
 - Where the original ends up is a project decision — `inbox/processed/` (this template's default) or
   co-located with its digest in `knowledge/sources/<type>/` if the project versions its corpus.
   **Decide once, write it into the pointer line below, and keep `.gitignore` consistent with it.**
+  <!-- literature: zotero -->
+  Scholarly papers are the exception: their original lives in Zotero only (`CLAUDE.md` §
+  "Literature PDFs"), and the pointer names the Zotero item key and attachment filename.
+  <!-- /literature: zotero -->
 
 ---
 
@@ -35,7 +39,7 @@ actually are, delete the rest at setup. Everything unmarked is common to both.
 *Confidence: [single-source | corroborated]*
 *Pages refer to: <printed page numbers | PDF page index>*        [academic]
 
-**Original: `<inbox/processed/… | knowledge/sources/<type>/…>`**
+**Original: `<inbox/processed/… | knowledge/sources/<type>/… | Zotero: <KEY> — <filename>>`**
 <One sentence: when is the original worth opening? e.g. "Worth opening to quote the decisions
 verbatim — the wording is what matters." / "Nothing in it beyond this note.">
 
