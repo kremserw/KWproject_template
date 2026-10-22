@@ -54,6 +54,8 @@ each file type is read, and its "Transcribing pages" section covers scans and ha
 - **`/lint`** — knowledge base health check
 - **`/file-back`** — persist a finding into `knowledge/`
 - **`/new-unit`** — scaffold a new {{UNIT_NOUN}}
+- **`/lit-search`** — Web of Science / Scopus search with abstracts, written to a CSV. First use:
+  run `bash .claude/skills/lit-search/setup-keys.sh` yourself in a terminal (hidden key entry into `.secrets/`).
 
 ---
 
