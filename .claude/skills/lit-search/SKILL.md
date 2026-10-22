@@ -81,7 +81,11 @@ In `--mode all`, a source without a key or without a query is skipped and named 
 a source that fails is reported in a ⚠ SOURCE FAILED banner and the rest still run.
 
 Default `--limit 500` (OpenAlex: the most-cited first); add `--out working/research/lit-search-<slug>-<YYYY-MM-DD>.csv`
-to name the file after the topic. The script prints the CSV path on stdout and its progress and warnings on stderr.
+to name the file after the topic. The script ranks the records by citations per year — the highest citation count
+across the sources, divided by the years since publication plus one; ties newer first; a record without a year or a
+count last — and writes the CSV in that order (its `rank` and `cites_per_year` columns). On stdout it prints an
+OVERVIEW of the top 15 in that order, each with the start of its abstract, and the CSV path as the last line; its
+progress and warnings go to stderr.
 
 ## Step 4 — Report
 
@@ -91,6 +95,7 @@ to name the file after the topic. The script prints the CSV path on stdout and i
   unique find — say so before calling anything unique.
 - Repeat every ⚠ banner verbatim: **LIMIT REACHED** (offer the re-run with the `--limit` it names), **ZERO
   MATCHES**, **ABSTRACT LOOKUPS FAILED**, **SOURCE FAILED**, **EGRESS OUTSIDE THE JKU RANGE**.
-- Then a short, ranked overview (combined: records found in more sources first, then by citations; otherwise by the
-  source's citation count) — triage from abstracts only. A paper is not a
-  corpus fact until it has been read and digested through the project's own procedure.
+- Then the ranked overview, from the script's OVERVIEW and in its order (by citations per year, in every mode; "found
+  in" is shown but does not rank) — one line a record with your triage from its abstract; never re-sort it, and never
+  read the whole CSV for it. A paper is not a corpus fact until it has been read and digested through the project's
+  own procedure.

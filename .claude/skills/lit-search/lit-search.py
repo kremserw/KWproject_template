@@ -30,7 +30,10 @@ when NEITHER a WoS nor a Scopus key exists (preflight line OPENALEX ONLY) — ne
 silent substitute for a WoS/Scopus key that is there but failing.
 
 Output: a UTF-8 CSV — default working/research/lit-search-<mode>-<date>.csv, relative
-to the repo root.
+to the repo root — its rows ranked by citations per year (the highest count across the
+sources, divided by the years since publication plus one; ties newer first), the rank and
+cites_per_year columns saying so; then an OVERVIEW of the top 15 on stdout, each with the
+start of its abstract, and the CSV path as stdout's last line.
 
 KEYS — never hard-coded, never printed, never passed on the command line. Looked up in
 this order, per service:
@@ -77,7 +80,7 @@ SECRETS = {"WOS_STARTER_API_KEY": REPO_ROOT / ".secrets" / "clarivate-wos.env",
            "OPENALEX_API_KEY":    REPO_ROOT / ".secrets" / "openalex.env"}
 
 COLUMNS = ["mode", "rank", "title", "authors", "year", "journal", "volume", "issue",
-           "pages", "doi", "times_cited", "times_cited_src",
+           "pages", "doi", "times_cited", "times_cited_src", "cites_per_year",
            "abstract", "abstract_chars", "abstract_src", "record_id"]
 
 
@@ -346,9 +349,74 @@ def openalex_to_row(w):
     }
 
 
+# ----------------------------- ranking and overview -----------------------------
+# One order for every mode, the CSV's rank column and the overview alike (Waldemar's choice, 2026-10-22): recency and
+# relevance together -- the highest citation count across the record's sources, divided by the years since publication
+# plus one, most first; ties newer first; a record without a year or a count after every scored one, by its count.
+OVERVIEW_TOP, OVERVIEW_EXCERPT = 15, 350
+CITE_COLUMNS = ("times_cited", "cited_wos", "cited_scopus", "cited_openalex")
+
+
+def _whole(v):
+    try:
+        return int(str(v).strip())
+    except ValueError:
+        return -1
+
+
+def cites_per_year(row, this_year):
+    """(score or None, year, highest count): None when the record has no count or no year."""
+    count = max(_whole(row.get(c, "")) for c in CITE_COLUMNS)
+    year = _whole(row.get("year", ""))
+    if count < 0 or year < 1:
+        return None, year, count
+    return count / (max(0, this_year - year) + 1), year, count
+
+
+def rank_rows(rows, this_year=None):
+    """rows sorted in place in the ranking above, each given its rank and its cites_per_year."""
+    this_year = this_year or date.today().year
+    scored = [(cites_per_year(r, this_year), i, r) for i, r in enumerate(rows)]
+
+    def order(x):
+        (score, year, count), i, _ = x
+        return (0, -score, -year, i) if score is not None else (1, -count, -year, i)
+    scored.sort(key=order)
+    rows[:] = [r for _, _, r in scored]
+    for n, ((score, _, _), _, r) in enumerate(scored, 1):
+        r["rank"] = n
+        r["cites_per_year"] = f"{score:.2f}" if score is not None else ""
+    return rows
+
+
+def _flat(v, n):
+    """A cell on one line: control characters dropped, whitespace collapsed, at most n characters."""
+    return " ".join("".join(c if c.isprintable() else " " for c in str(v if v is not None else "")).split())[:n]
+
+
+def print_overview(rows, combined):
+    """The overview the report gives (SKILL.md Step 4), on stdout in rank order: the top records, each with year,
+    counts, cites per year, title, journal, DOI and the start of its abstract."""
+    top = rows[:OVERVIEW_TOP]
+    print(f"OVERVIEW the top {len(top)} of {len(rows)} records by citations per year (the highest count across the "
+          f"sources, divided by the years since publication plus one), most first; ties newer first -- triage from "
+          f"abstracts only; the CSV holds them all")
+    for r in top:
+        if combined:
+            cites = " · ".join(f"{c[6:]} {_flat(r.get(c), 12)}" for c in CITE_COLUMNS[1:] if _flat(r.get(c), 12))
+        else:
+            cites = f"cited {_flat(r.get('times_cited'), 12)}" if _flat(r.get("times_cited"), 12) else ""
+        head = f"[{_flat(r.get('found_in'), 40)}] " if combined else ""
+        rate = f"{float(r['cites_per_year']):.1f}/yr" if r.get("cites_per_year") else "no score"
+        print(f"  {r['rank']}. {head}{_flat(r.get('year'), 4) or '?'} · {cites or 'no count'} · {rate} · "
+              f"{_flat(r.get('title'), 200)} -- {_flat(r.get('journal'), 80)} · doi {_flat(r.get('doi'), 80) or 'none'}")
+        a = _flat(r.get("abstract"), OVERVIEW_EXCERPT + 1)
+        print("     abstract: " + ((a[:OVERVIEW_EXCERPT] + "...") if len(a) > OVERVIEW_EXCERPT else (a or "none")))
+
+
 # ----------------------------- combined (--mode all) -----------------------------
 COMBINED_COLUMNS = ["rank", "found_in", "n_sources", "title", "authors", "year", "journal", "volume",
-                    "issue", "pages", "doi", "cited_wos", "cited_scopus", "cited_openalex",
+                    "issue", "pages", "doi", "cited_wos", "cited_scopus", "cited_openalex", "cites_per_year",
                     "abstract", "abstract_chars", "abstract_src", "wos_id", "scopus_id", "openalex_id"]
 SOURCE_LABEL = {"wos": "WoS", "scopus": "Scopus", "openalex": "OpenAlex"}
 
@@ -388,17 +456,6 @@ def combine(per_source):
         m["abstract_chars"] = len(m["abstract"] or "")
         if not m["abstract_src"]:
             m["abstract_src"] = "none"
-
-    def cites(m):
-        for s in ("wos", "scopus", "openalex"):
-            try:
-                return int(m[f"cited_{s}"])
-            except (TypeError, ValueError):
-                pass
-        return -1
-    rows.sort(key=lambda m: (-m["n_sources"], -cites(m)))
-    for i, m in enumerate(rows, 1):
-        m["rank"] = i
     return rows
 
 
@@ -447,6 +504,7 @@ def run_combined(args):
                 m["abstract"], m["abstract_src"] = scopus_abstract_by_doi(sc_key, m["doi"], args.sleep)
                 m["abstract_chars"] = len(m["abstract"])
                 n_err += str(m["abstract_src"]).startswith("scopus-error")
+    rank_rows(rows)
 
     out = Path(args.out) if args.out else \
         REPO_ROOT / "working" / "research" / f"lit-search-all-{date.today().isoformat()}.csv"
@@ -489,6 +547,7 @@ def run_combined(args):
         sys.stderr.write(f"  flag file written: {marker}\n")
     elif marker.exists():
         marker.unlink()
+    print_overview(rows, combined=True)
     print(out)
 
 
@@ -621,6 +680,7 @@ def main():
 
 
 def finish(args, rows, total):
+    rank_rows(rows)
     out = Path(args.out) if args.out else \
         REPO_ROOT / "working" / "research" / f"lit-search-{args.mode}-{date.today().isoformat()}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -658,6 +718,7 @@ def finish(args, rows, total):
         sys.stderr.write(f"  flag file written: {marker}\n")
     elif marker.exists():
         marker.unlink()   # clear a stale flag from an earlier truncated run to the same path
+    print_overview(rows, combined=False)
     print(out)
 
 
