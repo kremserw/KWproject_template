@@ -49,8 +49,12 @@ knowledge instead.
 The last line is `READY`, `OPENALEX ONLY …` or `NOT READY`. On `NOT READY`, report its lines and stop:
 - egress outside the JKU range → the JKU VPN must be on (Scopus abstracts are IP-gated to the institution's network);
 - `total=0` for WoS → the key authenticates but has no content entitlement (a library/plan question, not a code bug);
-- a gateway message "holds no key" / "not attached" → the key has to be added or attached in the server's
-  credential gateway once.
+- "not attached" → the key has to be attached in the server's credential gateway once;
+- "refused the request (401/403)" → the site said no; the gateway only swaps in its "no key" hint for any host it
+  holds no key for, so this means a missing key *or* a site that blocks the address — report it, don't guess.
+
+An `OPENALEX INCOMPLETE` banner (or "OpenAlex (partial)" under `--mode all`) means the CSV holds the records fetched
+before a later page failed, or before the 10,000-record ceiling for keyless paging; say so when you report the result.
 
 ## Step 2 — Build the query
 
