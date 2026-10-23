@@ -132,10 +132,11 @@ def _get(url, headers, params=None, timeout=45, retries=2):
             if e.code == 429 and "openalex" in url:
                 raise RuntimeError("HTTP 429: the free OpenAlex budget for this IP is used up for today — a "
                                    "personal OpenAlex key (setup-keys.sh) gives its own budget")
-            if "credential_not_found" in body:           # the gateway has no key for this host
+            if "credential_not_found" in body:           # the gateway's hint, not necessarily the site's answer
                 host = urllib.parse.urlparse(url).hostname
-                raise RuntimeError(f"HTTP {e.code}: the credential gateway holds no key for {host} — "
-                                   f"it must be added there once (not in the chat)")
+                raise RuntimeError(f"HTTP {e.code}: {host} refused the request (401/403). The credential gateway "
+                                   f"replaces the body of such an answer with its own 'no key' hint for any host "
+                                   f"it holds no key for — so the site may need a key, or may block this address")
             if "access_restricted" in body:              # key is there, not attached to this agent
                 host = urllib.parse.urlparse(url).hostname
                 raise RuntimeError(f"HTTP {e.code}: the credential gateway holds a key for {host}, but it is "
@@ -301,24 +302,56 @@ def openalex_filter(query, extra_filter):
     return f + ("," + extra_filter if extra_filter else "")
 
 
+OA_PAGE_CAP = 10000   # without a key, OpenAlex pages with page= only up to 10,000 records
+
+
 def openalex_search(key, query, extra_filter, limit, sleep):
+    """Returns (works, total, problems). Paging past the first page with cursor= needs a key,
+    so without one this pages with page= (200 per page, up to OA_PAGE_CAP records). Records are
+    deduplicated by OpenAlex id: under the citation sort, works with equal counts can shift
+    across page borders. If a later page fails, the records already fetched are kept and the
+    failure is returned in problems; a failing first page raises as before."""
     flt = openalex_filter(query, extra_filter)
-    works, cursor, total = [], "*", 0
-    while len(works) < limit and cursor:
-        per = min(200, limit - len(works))
-        data = _get(OPENALEX_WORKS, {"Accept": "application/json"},
-                    _oa_params(key, {"filter": flt, "sort": "cited_by_count:desc",
-                                     "per-page": per, "cursor": cursor}))
+    works, seen, total, problems = [], set(), 0, []
+    cursor, page = "*", 1
+    while len(works) < limit:
+        if key:
+            params = {"per-page": min(200, limit - len(works)), "cursor": cursor}
+        else:
+            if (page - 1) * 200 >= OA_PAGE_CAP:
+                problems.append(f"stopped at {OA_PAGE_CAP:,} records: without an OpenAlex key, paging "
+                                f"beyond that is not possible (a free key, setup-keys.sh, lifts it)")
+                break
+            params = {"per-page": 200, "page": page}
+        try:
+            data = _get(OPENALEX_WORKS, {"Accept": "application/json"},
+                        _oa_params(key, {"filter": flt, "sort": "cited_by_count:desc", **params}))
+        except RuntimeError as e:
+            if not works:
+                raise
+            problems.append(f"page {page} failed, kept the {len(works)} records already fetched — {e}")
+            break
         meta = data.get("meta", {}) or {}
         total = meta.get("count", total) or 0
         batch = data.get("results", []) or []
         if not batch:
             break
-        works.extend(batch)
+        for w in batch:
+            wid = w.get("id")
+            if wid and wid in seen:
+                continue
+            seen.add(wid)
+            works.append(w)
         sys.stderr.write(f"  [openalex] +{len(batch)} (have {len(works)}/{min(limit,total)} of {total})\n")
-        cursor = meta.get("next_cursor")
+        page += 1
+        if key:
+            cursor = meta.get("next_cursor")
+            if not cursor:
+                break
+        elif (page - 1) * 200 >= total:
+            break
         time.sleep(sleep)
-    return works[:limit], total
+    return works[:limit], total, problems
 
 
 def openalex_abstract(inv):
@@ -491,8 +524,11 @@ def run_combined(args):
                 per_source[s] = [scopus_to_row(e, view, sc_key, args.sleep, False) for e in entries]
             else:
                 sys.stderr.write(f"OpenAlex search: {queries[s]!r} filter {args.filter or '-'} (limit {args.limit})\n")
-                works, totals[s] = openalex_search(oa_key, queries[s], args.filter, args.limit, args.sleep)
+                works, totals[s], problems = openalex_search(oa_key, queries[s], args.filter, args.limit, args.sleep)
                 per_source[s] = [openalex_to_row(w) for w in works]
+                for p in problems:
+                    failed.append(f"OpenAlex (partial): {p}")
+                    sys.stderr.write(f"  [openalex] INCOMPLETE — {p}\n")
         except RuntimeError as e:
             failed.append(f"{SOURCE_LABEL[s]}: {e}")
             sys.stderr.write(f"  [{s}] FAILED — {e}\n")
@@ -530,7 +566,7 @@ def run_combined(args):
     if skipped:
         sys.stderr.write(f"  not searched: {', '.join(skipped)}\n")
     if failed:
-        sys.stderr.write(f"\n{bar}\n⚠  SOURCE FAILED — the combined result is missing it:\n  " +
+        sys.stderr.write(f"\n{bar}\n⚠  SOURCE FAILED OR INCOMPLETE — the combined result lacks it, wholly or in part:\n  " +
                          "\n  ".join(failed) + f"\n{bar}\n")
     if n_err:
         sys.stderr.write(f"\n{bar}\n⚠  {n_err} ABSTRACT LOOKUPS FAILED at Scopus (abstract_src scopus-error:… in the "
@@ -641,7 +677,11 @@ def main():
         oa_key, oa_src = get_key("OPENALEX_API_KEY")
         sys.stderr.write(f"OpenAlex search: {args.query!r} filter {args.filter or '-'} (limit {args.limit}; "
                          f"{'own key' if oa_key else 'no key'})\n")
-        works, total = openalex_search(oa_key, args.query, args.filter, args.limit, args.sleep)
+        works, total, problems = openalex_search(oa_key, args.query, args.filter, args.limit, args.sleep)
+        if problems:
+            bar = "=" * 70
+            sys.stderr.write(f"\n{bar}\n⚠  OPENALEX INCOMPLETE — the CSV holds only what was fetched:\n  " +
+                             "\n  ".join(problems) + f"\n{bar}\n")
         rows = []
         for i, w in enumerate(works, 1):
             r = openalex_to_row(w); r["mode"] = "openalex"; r["rank"] = i
