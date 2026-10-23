@@ -177,6 +177,25 @@ Review Agent    →  working/review/
 | Slides (PPTX), syllabi (DOCX), books (PDF), datasets | `knowledge/sources/materials/` |
 | Processed inbox items | `inbox/processed/` |
 
+### Literature PDFs
+
+<!-- literature: zotero -->
+Scholarly literature (journal articles, books, chapters, conference papers, preprints) lives in
+**Zotero only**, so there is one version of each paper. No literature PDF is committed to this
+repo or kept in `inbox/processed/`. The digest names it as `**Original: Zotero: <KEY> — <filename>**`
+and sessions read it from Zotero storage; if a copy was placed in `inbox/` for a session that cannot
+read Zotero storage, it stays there after digesting, is named in the report, and is removed by
+whoever placed it — never by the session (Inbox Processing Protocol, Step 3).
+Only scholarly literature goes to Zotero. Grey literature (reports, statistics, web pages) stays in
+the project, filed by the table above, unless the project lead decides otherwise for that item.
+Never add an item to Zotero, or delete one, without the project lead's yes.
+<!-- /literature: zotero -->
+<!-- literature: project -->
+Literature PDFs follow the inbox rule: the original goes to `inbox/processed/` after digesting (or
+beside its digest, if this project versions its corpus), and the digest points there. This is the
+setting for a project shared with collaborators who may not share one reference library.
+<!-- /literature: project -->
+
 Always append to knowledge domain files — never overwrite. Use dated section headers.
 
 When appending content from Q&A sessions, web research, or inbox processing, use

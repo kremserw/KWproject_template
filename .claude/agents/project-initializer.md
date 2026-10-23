@@ -34,6 +34,7 @@ DOMAINS[]  (knowledge domains / themes, slugged),
 ANALYTIC_FRAMEWORK  (research question or framework, may be "none"),
 UNIT_NOUN, UNIT_NOUN_PLURAL, UNIT_NUMBERING (numbered | slug-only),
 COLLABORATORS[], REPO_REMOTE (owner/repo or "local-only"),
+LITERATURE_HOME (zotero | project),
 OUTPUT_LANGUAGE (+ REGISTER, e.g. "German (formal Sie)"),
 TRAJECTORIES[]  (dashboard slices), CADENCE, DATE
 ```
@@ -92,6 +93,10 @@ title, a provenance-tag block (copy `.claude/templates/provenance-tag.md`), and 
   archive glob). `{{REPO_SLUG}}` into the canonical output filename and review filenames.
 - If `REPO_REMOTE == local-only`: rewrite the git steps in session-start/session-wrap to skip
   fetch/pull/push and note "local-only project — no remote sync".
+- `LITERATURE_HOME`: `CLAUDE.md` § "Literature PDFs", `.claude/agents/inbox-processor.md` (Step 2f
+  pointer, Step 3) and `.claude/templates/source-digest.md` each carry two variants, marked
+  `<!-- literature: zotero -->` and `<!-- literature: project -->`. Keep the chosen one, delete the
+  other, and remove the markers.
 - If `OUTPUT_LANGUAGE` includes "formal" register (e.g. German "Sie"): write a project memory note
   recording the register convention so it is applied consistently; otherwise do not.
 
@@ -106,7 +111,7 @@ title, a provenance-tag block (copy `.claude/templates/provenance-tag.md`), and 
 - **Only after** the known tokens are gone: `git rm .template-uninstantiated`. Verify with a grep for
   the *specific* token names (PROJECT_NAME, PROJECT_GOAL, REPO_SLUG, SESSION_PREFIX, UNIT_NOUN,
   TRAJECTORIES, OUTPUT_TYPES, CANONICAL_OUTPUT, DOMAINS, ANALYTIC_FRAMEWORK, OUTPUT_LANGUAGE,
-  REPO_REMOTE, COLLABORATORS, SNAPSHOT_CADENCE, …) across `*.md`, **excluding the three files that
+  REPO_REMOTE, COLLABORATORS, LITERATURE_HOME, SNAPSHOT_CADENCE, …) across `*.md`, **excluding the three files that
   legitimately document the token system**: `.claude/TEMPLATE-GUIDE.md` (the moved explainer),
   `.claude/templates/README.md`, and the project charter. If any known token remains elsewhere, leave
   the sentinel in place and report which files are still incomplete (resumable).

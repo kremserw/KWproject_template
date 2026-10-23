@@ -38,7 +38,7 @@ periodically health-checked, so the project gets more useful over time instead o
 2. Start Claude Code there and run **`/session-start`** (or `/setup-project` directly).
 3. It detects the fresh `.template-uninstantiated` sentinel and runs a short **setup interview**:
    project name, goal, type, outputs, knowledge domains, framework, the "unit" of work, collaborators,
-   git remote, language, and dashboard trajectories.
+   git remote, where literature PDFs live (Zotero or the project), language, and dashboard trajectories.
 4. The `project-initializer` agent fills in every config file, prunes the knowledge base to fit your
    project type, seeds the dashboard, writes a **project charter**, and deletes the sentinel.
 5. From then on, `/session-start` and `/session-wrap` bookend every working session.

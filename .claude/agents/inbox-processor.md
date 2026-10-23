@@ -110,6 +110,12 @@ reports contain both; split the extracts accordingly.
   In a project that versions its corpus beside the digests, the line reads
   **Original: `knowledge/sources/<type>/<slug>.<ext>`** instead: the pointer and the move always say the
   same.
+  <!-- literature: zotero -->
+  For a scholarly paper (`CLAUDE.md` § "Literature PDFs"), the line reads
+  **Original: Zotero: `<KEY>` — `<filename>`** — the item key and the attachment's filename. If the
+  paper is not yet in Zotero, write **Original: not yet in Zotero — `<original-filename>`** and list it
+  in the Step 5 report for the project lead to decide; never add it yourself.
+  <!-- /literature: zotero -->
 - The original's move to its terminal home happens in Step 3, together with any Markdown conversion of
   it. Do not move it here.
 
@@ -130,6 +136,9 @@ processed. Leaving the root clear is what makes the next run's Step 1 meaningful
 | An original you digested | `mv` to its home as it is — the bytes stay unchanged: `inbox/processed/` by default; `knowledge/sources/<type>/<slug>.<ext>`, beside its digest, in a project that versions its corpus (see the note below) |
 | Its Markdown conversion, if the SessionStart hook made one | `mv` to `inbox/processed/` |
 | A reference or non-source file (a cover note, a duplicate) | `mv` to `inbox/processed/` — out of the root either way |
+<!-- literature: zotero -->
+| A scholarly paper's PDF (`CLAUDE.md` § "Literature PDFs") | **Leave it in `inbox/`** and name it in the report: its home is Zotero, and the copy is removed by whoever placed it. Never `mv` it to `inbox/processed/` or beside the digest — that would make a second version |
+<!-- /literature: zotero -->
 | Something you deliberately flagged as unclear in Step 5, or a file Step 2b left unread or for a transcription | Leave it in `inbox/` and **name it** in the report |
 
 Never delete anything from `inbox/`. Moving is the only disposition.

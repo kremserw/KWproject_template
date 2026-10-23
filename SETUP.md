@@ -122,7 +122,7 @@ as before; nothing else in the project changes.
 The first time you start Claude Code in a fresh copy of this template, a `.template-uninstantiated`
 sentinel file is present. Run **`/setup-project`** (or just `/session-start`, which detects the sentinel
 and routes you in). The interview asks for the project name, goal, type, outputs, knowledge domains,
-collaborators, git remote, output language, and dashboard trajectories — then fills in every config
+collaborators, git remote, where literature PDFs live, output language, and dashboard trajectories — then fills in every config
 file and tailors the folder structure. After that, the project is yours; `/session-start` runs the
 normal routine from then on.
 
