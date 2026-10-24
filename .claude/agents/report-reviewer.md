@@ -1,5 +1,6 @@
 ---
 name: report-reviewer
+model: claude-sonnet-5-5
 description: Reviews the current main output (report / synthesis / proposal / deck) against
   specific quality criteria. Produces a structured, section-by-section critique with actionable
   instructions for the Writing Agent. Does NOT rewrite — only critiques. Invoke after any major

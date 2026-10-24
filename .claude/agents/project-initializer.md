@@ -1,5 +1,6 @@
 ---
 name: project-initializer
+model: claude-sonnet-5-5
 description: One-time bootstrap writer. Consumes the /setup-project interview brief and
   instantiates a fresh template copy — replaces all {{TOKENS}} in config files, prunes/creates
   knowledge-base subfolders per the chosen preset, seeds INDEX.md trajectories, writes the project

@@ -10,7 +10,7 @@ what it's about — run `/setup-project` once inside Claude Code; see README.md.
 
 | Requirement | Version | Purpose |
 |-------------|---------|---------|
-| **Claude Code** | recent | CLI agent (installed via `npm install -g @anthropic-ai/claude-code`) |
+| **Claude Code** | ≥ 2.1.284 | CLI agent (installed via `npm install -g @anthropic-ai/claude-code`); the project's agents run `claude-sonnet-5-5` (the `model:` line in `.claude/agents/`), which older versions do not know |
 | **Anthropic subscription** | Max plan recommended | For a large-context model (1M window) |
 | **Node.js** | v22.x (via nvm recommended) | Runtime for Claude Code + Firecrawl CLI |
 | **Python 3** | ≥ 3.11 | Used by hook scripts for JSON parsing |
