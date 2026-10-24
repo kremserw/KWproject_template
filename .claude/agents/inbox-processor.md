@@ -1,5 +1,6 @@
 ---
 name: inbox-processor
+model: claude-sonnet-5-5
 description: Processes all new files in inbox/. Reads each file, writes a Layer-1 digest,
   updates the knowledge base, files every original into its terminal home so inbox/ root is
   left clear, and updates ARTIFACTS.md. Invoke whenever new files appear in inbox/ before

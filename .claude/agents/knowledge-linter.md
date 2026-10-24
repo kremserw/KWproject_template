@@ -1,5 +1,6 @@
 ---
 name: knowledge-linter
+model: claude-sonnet-5-5
 description: Runs a systematic health check over the knowledge/ directory. Identifies
   inconsistencies, stale content, orphaned files, coverage gaps, broken references,
   near-duplicates, and missing cross-links. Produces a structured lint report to
